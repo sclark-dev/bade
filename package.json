@@ -1,8 +1,8 @@
 {
-  "name": "sade",
+  "name": "bade",
   "version": "1.8.1",
-  "description": "Smooth (CLI) operator 🎶",
-  "repository": "lukeed/sade",
+  "description": "Smooth (CLI) operator for Bitburner 🎶",
+  "repository": "sclark-dev/base",
   "module": "lib/index.mjs",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -16,8 +16,16 @@
     "email": "luke.edwards05@gmail.com",
     "url": "https://lukeed.com"
   },
+  "contributors": [
+    {
+      "name": "Shane Clark",
+      "email": "sclark@frostfire.io",
+      "url": "http://sclark-dev.github.io"
+    }
+  ],
   "scripts": {
     "build": "rollup -c",
+    "bitburner": "rollup -c rollup.bb.config.js",
     "test": "tape -r esm test/*.js | tap-spec"
   },
   "dependencies": {
@@ -27,17 +35,15 @@
     "node": ">=6"
   },
   "keywords": [
+    "bitburner",
     "cli",
-    "cli-app",
-    "commander",
     "arguments",
-    "parser",
-    "yargs",
-    "argv"
+    "parser"
   ],
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "~13",
     "esm": "3.2.25",
-    "rollup": "1.32.1",
+    "rollup": "~2.66",
     "tap-spec": "4.1.2",
     "tape": "4.14.0",
     "terser": "4.8.0"

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin')
+bade('bin')
 	.command('foo [dir]', null, { alias: 'f', default:true })
 	.action(dir => console.log(`~> ran "foo" action w/ "${dir || '~EMPTY~'}" arg`))
 

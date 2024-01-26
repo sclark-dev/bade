@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin <type> [dir]')
+bade('bin <type> [dir]')
 	.alias('error')
 	.parse(process.argv);

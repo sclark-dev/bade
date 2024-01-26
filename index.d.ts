@@ -1,10 +1,11 @@
 import type * as mri from 'mri';
+import {NS} from "./NetscriptDefinitions";
 
 type Arrayable<T> = T | T[];
 
-declare function sade(usage: string, isSingle?: boolean): sade.Sade;
+declare function bade(ns: NS, usage: string, isSingle?: boolean): bade.Bade;
 
-declare namespace sade {
+declare namespace bade {
 	export type Handler = (...args: any[]) => any;
 	export type Value = number | string | boolean | null;
 
@@ -14,24 +15,24 @@ declare namespace sade {
 		args: string[];
 	}
 
-	export interface Sade {
+	export interface Bade {
 		command(usage: string, description?: string, options?: {
 			alias?: Arrayable<string>;
 			default?: boolean;
-		}): Sade;
+		}): Bade;
 
-		option(flag: string, description?: string, value?: Value): Sade;
-		action(handler: Handler): Sade;
-		describe(text: Arrayable<string>): Sade;
-		alias(...names: string[]): Sade;
-		example(usage: string): Sade;
+		option(flag: string, description?: string, value?: Value): Bade;
+		action(handler: Handler): Bade;
+		describe(text: Arrayable<string>): Bade;
+		alias(...names: string[]): Bade;
+		example(usage: string): Bade;
 
-		parse(arr: string[], opts: { lazy: true } & mri.Options): LazyOutput;
-		parse(arr: string[], opts?: { lazy?: boolean } & mri.Options): void;
+		parse(arr: (string|number|boolean)[], opts: { lazy: true } & mri.Options): LazyOutput;
+		parse(arr: (string|number|boolean)[], opts?: { lazy?: boolean } & mri.Options): void;
 
-		version(value: string): Sade;
+		version(value: string): Bade;
 		help(cmd?: string): void;
 	}
 }
 
-export = sade;
+export = bade;

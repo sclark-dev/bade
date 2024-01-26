@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin')
+bade('bin')
 	.alias('foo')
 	.command('bar <src>')
 	.parse(process.argv);

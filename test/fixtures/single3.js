@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin', true)
+bade('bin', true)
 	.command('foo <bar>')
 	.action((bar, opts) => {
 		console.log(`~> ran "foo" with: ${JSON.stringify(opts)}`);

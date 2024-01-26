@@ -1,4 +1,4 @@
-import { minify } from 'terser';
+import {minify} from 'terser';
 import * as pkg from './package.json';
 
 /**

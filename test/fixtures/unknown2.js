@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin')
+bade('bin')
 	.option('-g, --global', 'global flag')
 	.option('--flag1', 'no alias or default')
 

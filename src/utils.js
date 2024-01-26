@@ -7,20 +7,21 @@ export const NL = '\n';
 
 export function format(arr) {
 	if (!arr.length) return '';
-	let len = maxLen( arr.map(x => x[0]) ) + GAP;
+	let len = maxLen(arr.map(x => x[0])) + GAP;
 	let join = a => a[0] + ' '.repeat(len - a[0].length) + a[1] + (a[2] == null ? '' : `  (default ${a[2]})`);
 	return arr.map(join);
 }
 
 export function maxLen(arr) {
-  let c=0, d=0, l=0, i=arr.length;
-  if (i) while (i--) {
-    d = arr[i].length;
-    if (d > c) {
-      l = i; c = d;
-    }
-  }
-  return arr[l].length;
+	let c = 0, d = 0, l = 0, i = arr.length;
+	if (i) while (i--) {
+		d = arr[i].length;
+		if (d > c) {
+			l = i;
+			c = d;
+		}
+	}
+	return arr[l].length;
 }
 
 export function noop(s) {
@@ -29,7 +30,7 @@ export function noop(s) {
 
 export function section(str, arr, fn) {
 	if (!arr || !arr.length) return '';
-	let i=0, out='';
+	let i = 0, out = '';
 	out += (NL + __ + str);
 	for (; i < arr.length; i++) {
 		out += (NL + __ + __ + fn(arr[i]));
@@ -38,7 +39,7 @@ export function section(str, arr, fn) {
 }
 
 export function help(bin, tree, key, single) {
-	let out='', cmd=tree[key], pfx=`$ ${bin}`, all=tree[ALL];
+	let out = '', cmd = tree[key], pfx = `$ ${bin}`, all = tree[ALL];
 	let prefix = s => `${pfx} ${s}`.replace(/\s+/g, ' ');
 
 	// update ALL & CMD options
@@ -54,7 +55,7 @@ export function help(bin, tree, key, single) {
 	out += section('Usage', [cmd.usage], prefix);
 
 	if (!single && key === DEF) {
-		let key, rgx=/^__/, help='', cmds=[];
+		let key, rgx = /^__/, help = '', cmds = [];
 		// General help :: print all non-(alias|internal) commands & their 1st line of helptext
 		for (key in tree) {
 			if (typeof tree[key] == 'string' || rgx.test(key)) continue;
@@ -76,11 +77,17 @@ export function help(bin, tree, key, single) {
 	return out;
 }
 
-export function error(bin, str, num=1) {
+/**
+ * @param {NS} ns
+ * @param {string} bin
+ * @param {*} str
+ * @param num
+ */
+export function error(ns, bin, str, num = 1) {
 	let out = section('ERROR', [str], noop);
 	out += (NL + __ + `Run \`$ ${bin} --help\` for more info.` + NL);
-	console.error(out);
-	process.exit(num);
+	ns.tprint(`ERROR: ${out}`);
+	ns.exit();
 }
 
 // Strips leading `-|--` & extra space(s)

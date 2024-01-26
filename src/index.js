@@ -1,12 +1,16 @@
 import mri from 'mri';
 import * as $ from './utils';
-import { ALL, DEF } from './utils';
+import {ALL, DEF} from './utils';
 
-class Sade {
-	constructor(name, isOne) {
+class Bade {
+	/**
+	 * @param {NS} ns
+	 */
+	constructor(ns, name, isOne) {
 		let [bin, ...rest] = name.split(/\s+/);
 		isOne = isOne || rest.length > 0;
 
+		this.ns = ns;
 		this.bin = bin;
 		this.ver = '0.0.0';
 		this.default = '';
@@ -18,13 +22,13 @@ class Sade {
 		this.curr = ''; // reset
 	}
 
-	command(str, desc, opts={}) {
+	command(str, desc, opts = {}) {
 		if (this.single) {
 			throw new Error('Disable "single" mode to add commands');
 		}
 
 		// All non-([|<) are commands
-		let cmd=[], usage=[], rgx=/(\[|<)/;
+		let cmd = [], usage = [], rgx = /(\[|<)/;
 		str.split(/\s+/).forEach(x => {
 			(rgx.test(x.charAt(0)) ? usage : cmd).push(x);
 		});
@@ -41,9 +45,9 @@ class Sade {
 		usage = usage.join(' '); // to string
 
 		this.curr = cmd;
-		if (opts.default) this.default=cmd;
+		if (opts.default) this.default = cmd;
 
-		this.tree[cmd] = { usage, alibi:[], options:[], alias:{}, default:{}, examples:[] };
+		this.tree[cmd] = {usage, alibi: [], options: [], alias: {}, default: {}, examples: []};
 		if (opts.alias) this.alias(opts.alias);
 		if (desc) this.describe(desc);
 
@@ -64,10 +68,10 @@ class Sade {
 	}
 
 	option(str, desc, val) {
-		let cmd = this.tree[ this.curr || ALL ];
+		let cmd = this.tree[this.curr || ALL];
 
 		let [flag, alias] = $.parse(str);
-		if (alias && alias.length > 1) [flag, alias]=[alias, flag];
+		if (alias && alias.length > 1) [flag, alias] = [alias, flag];
 
 		str = `--${flag}`;
 		if (alias && alias.length > 0) {
@@ -90,12 +94,12 @@ class Sade {
 	}
 
 	action(handler) {
-		this.tree[ this.curr || DEF ].handler = handler;
+		this.tree[this.curr || DEF].handler = handler;
 		return this;
 	}
 
 	example(str) {
-		this.tree[ this.curr || DEF ].examples.push(str);
+		this.tree[this.curr || DEF].examples.push(str);
 		return this;
 	}
 
@@ -104,11 +108,16 @@ class Sade {
 		return this;
 	}
 
-	parse(arr, opts={}) {
-		arr = arr.slice(); // copy
-		let offset=2, tmp, idx, isVoid, cmd;
-		let alias = { h:'help', v:'version' };
-		let argv = mri(arr.slice(offset), { alias });
+	/**
+	 * Parse a set of CLI arguments
+	 * @param {(string | number | boolean)[]} arr Your script's ns.args input.
+	 * @param opts Additional parsing options.
+	 */
+	parse(arr, opts = {}) {
+		arr = arr.slice().map(a => a.toString()); // copy and convert all to string
+		let offset = 2, tmp, idx, isVoid, cmd;
+		let alias = {h: 'help', v: 'version'};
+		let argv = mri(arr.slice(offset), {alias});
 		let isSingle = this.single;
 		let bin = this.bin;
 		let name = '';
@@ -117,12 +126,12 @@ class Sade {
 			cmd = this.tree[DEF];
 		} else {
 			// Loop thru possible command(s)
-			let i=1, xyz, len=argv._.length + 1;
+			let i = 1, xyz, len = argv._.length + 1;
 			for (; i < len; i++) {
 				tmp = argv._.slice(0, i).join(' ');
 				xyz = this.tree[tmp];
 				if (typeof xyz === 'string') {
-					idx = (name=xyz).split(' ');
+					idx = (name = xyz).split(' ');
 					arr.splice(arr.indexOf(argv._[0]), i, ...idx);
 					i += (idx.length - i);
 				} else if (xyz) {
@@ -142,7 +151,7 @@ class Sade {
 					arr.unshift(name);
 					offset++;
 				} else if (tmp) {
-					return $.error(bin, `Invalid command: ${tmp}`);
+					return $.error(this.ns, bin, `Invalid command: ${tmp}`);
 				} //=> else: cmd not specified, wait for now...
 			}
 		}
@@ -152,7 +161,7 @@ class Sade {
 		if (argv.version) return this._version();
 
 		if (!isSingle && cmd === void 0) {
-			return $.error(bin, 'No command specified.');
+			return $.error(this.ns, bin, 'No command specified.');
 		}
 
 		let all = this.tree[ALL];
@@ -165,37 +174,37 @@ class Sade {
 		if (!!~idx) arr.splice(idx, tmp.length);
 
 		let vals = mri(arr.slice(offset), opts);
-		if (!vals || typeof vals === 'string') {
-			return $.error(bin, vals || 'Parsed unknown option flag(s)!');
+		if (!vals || typeof vals === 'string') {
+			return $.error(this.ns, bin, vals || 'Parsed unknown option flag(s)!');
 		}
 
 		let segs = cmd.usage.split(/\s+/);
-		let reqs = segs.filter(x => x.charAt(0)==='<');
+		let reqs = segs.filter(x => x.charAt(0) === '<');
 		let args = vals._.splice(0, reqs.length);
 
 		if (args.length < reqs.length) {
 			if (name) bin += ` ${name}`; // for help text
-			return $.error(bin, 'Insufficient arguments!');
+			return $.error(this.ns, bin, 'Insufficient arguments!');
 		}
 
-		segs.filter(x => x.charAt(0)==='[').forEach(_ => {
+		segs.filter(x => x.charAt(0) === '[').forEach(_ => {
 			args.push(vals._.shift()); // adds `undefined` per [slot] if no more
 		});
 
 		args.push(vals); // flags & co are last
 		let handler = cmd.handler;
-		return opts.lazy ? { args, name, handler } : handler.apply(null, args);
+		return opts.lazy ? {args, name, handler} : handler.apply(null, args);
 	}
 
 	help(str) {
-		console.log(
+		this.ns.tprint(
 			$.help(this.bin, this.tree, str || DEF, this.single)
 		);
 	}
 
 	_version() {
-		console.log(`${this.bin}, ${this.ver}`);
+		this.ns.tprint(`${this.bin}, ${this.ver}`);
 	}
 }
 
-export default (str, isOne) => new Sade(str, isOne);
+export default (str, isOne) => new Bade(str, isOne);

@@ -1,5 +1,5 @@
 import test from 'tape';
-import sade from '../src';
+import bade from '../src';
 
 function isShapely(t, tree, key) {
 	t.is(typeof tree[key].usage, 'string', `~> tree[${key}].usage is a string`);
@@ -9,14 +9,14 @@ function isShapely(t, tree, key) {
 	t.is(typeof tree[key].alias, 'object', `~> tree[${key}].alias is an object`);
 }
 
-test('sade', t => {
-	t.is(typeof sade, 'function', 'exports a function');
+test('bade', t => {
+	t.is(typeof bade, 'function', 'exports a function');
 	t.end();
 });
 
-test('sade()', t => {
-	let ctx = sade('foo');
-	t.ok(ctx.constructor && ctx.constructor.name === 'Sade', 'returns instance of Sade');
+test('bade()', t => {
+	let ctx = bade('foo');
+	t.ok(ctx.constructor && ctx.constructor.name === 'Bade', 'returns instance of Bade');
 	t.is(ctx.bin, 'foo', 'sets Program name to `foo`');
 	t.is(ctx.ver, '0.0.0', 'defaults `ver` to `0.0.0`');
 	t.is(ctx.curr, '', 'is empty command-name scope');
@@ -31,13 +31,13 @@ test('sade()', t => {
 });
 
 test('prog.version (global)', t => {
-	let ctx = sade('foo').version('1.0.0');
+	let ctx = bade('foo').version('1.0.0');
 	t.is(ctx.ver, '1.0.0', 'sets a new version~!');
 	t.end();
 });
 
 test('prog.option (global)', t => {
-	let ctx = sade('foo');
+	let ctx = bade('foo');
 	t.is(ctx.tree.__all__.options.length, 0, 'no global options (default)');
 	ctx.option('--foo, -f', 'bar', 'baz.js');
 	let arr = ctx.tree.__all__.options;
@@ -50,7 +50,7 @@ test('prog.option (global)', t => {
 });
 
 test('prog.option (hypenated)', t => {
-	let ctx = sade('foo');
+	let ctx = bade('foo');
 	ctx.option('--foo-bar, -f');
 	ctx.option('--foo-bar-baz');
 	let arr = ctx.tree.__all__.options;
@@ -60,7 +60,7 @@ test('prog.option (hypenated)', t => {
 });
 
 test('prog.describe (global)', t => {
-	let ctx = sade('foo').describe('Who is on first. What is on second.');
+	let ctx = bade('foo').describe('Who is on first. What is on second.');
 	let arr = ctx.tree.__default__.describe;
 	t.ok(Array.isArray(arr), 'adds a `describe` array for Program info');
 	t.is(arr.length, 2, 'splits the description into 2 sentence items');
@@ -68,7 +68,7 @@ test('prog.describe (global)', t => {
 });
 
 test('prog.example (global)', t => {
-	let ctx = sade('foo').example('hello --local');
+	let ctx = bade('foo').example('hello --local');
 	let arr = ctx.tree.__default__.examples;
 	t.ok(Array.isArray(arr), 'adds a `examples` array for Program info');
 	t.is(arr.length, 1, 'contains the single example');
@@ -77,7 +77,7 @@ test('prog.example (global)', t => {
 });
 
 test('prog.command', t => {
-	let ctx = sade('foo').command('bar');
+	let ctx = bade('foo').command('bar');
 	let bar = ctx.tree.bar;
 	t.ok(bar, 'adds `bar` key to the command tree');
 	isShapely(t, ctx.tree, 'bar');
@@ -138,7 +138,7 @@ test('prog.action', t => {
 	t.plan(13);
 	let a='Bob', b, c, d, e;
 
-	let ctx = sade('foo')
+	let ctx = bade('foo')
 		.command('greet <name>')
 		.option('--loud', 'Be loud?')
 		.option('--with-kiss, -k', 'Super friendly?')
@@ -171,7 +171,7 @@ test('prog.action (multi requires)', t => {
 
 	let a='aaa', b='bbb', c=false;
 
-	let ctx = sade('foo')
+	let ctx = bade('foo')
 		.command('build <src> <dest>')
 		.option('-f, --force', 'Force foo overwrite')
 		.action((src, dest, opts) => {
@@ -194,7 +194,7 @@ test('prog.action (multi optional)', t => {
 
 	let a='aaa', b='bbb', c=false;
 
-	let ctx = sade('foo')
+	let ctx = bade('foo')
 		.command('build [src] [dest]')
 		.option('-f, --force', 'Force foo overwrite')
 		.action((src, dest, opts) => {
@@ -213,7 +213,7 @@ test('prog.action (multi optional)', t => {
 });
 
 test('prog.parse :: safe :: default', t => {
-	let ctx = sade('foo').command('build', '', { default: true });
+	let ctx = bade('foo').command('build', '', { default: true });
 
 	let argv1 = ['', '', 'build'];
 	let foo = ctx.parse(argv1, { lazy: true });
@@ -229,7 +229,7 @@ test('prog.parse :: safe :: default', t => {
 });
 
 test('prog.parse :: safe :: alias', t => {
-	let ctx = sade('foo').command('build').alias('b');
+	let ctx = bade('foo').command('build').alias('b');
 
 	let argv1 = ['', '', 'build'];
 	let foo = ctx.parse(argv1, { lazy: true });
@@ -245,7 +245,7 @@ test('prog.parse :: safe :: alias', t => {
 });
 
 test('prog.parse :: safe :: default :: flags', t => {
-	let ctx = sade('foo').command('build <dir>', '', { default: true });
+	let ctx = bade('foo').command('build <dir>', '', { default: true });
 
 	let argv1 = ['', '', '-r', 'dotenv', 'build', 'public', '--fresh'];
 	let foo = ctx.parse(argv1, { lazy: true });
@@ -261,7 +261,7 @@ test('prog.parse :: safe :: default :: flags', t => {
 });
 
 test('prog.parse :: safe :: alias :: flags', t => {
-	let ctx = sade('foo').command('build <dir>').alias('b');
+	let ctx = bade('foo').command('build <dir>').alias('b');
 
 	let argv1 = ['', '', '-r', 'dotenv', 'build', 'public', '--fresh'];
 	let foo = ctx.parse(argv1, { lazy: true });
@@ -281,7 +281,7 @@ test('prog.parse :: lazy', t => {
 
 	let val='aaa', f=false;
 
-	let ctx = sade('foo')
+	let ctx = bade('foo')
 		.command('build <src>')
 		.option('--force').action((src, opts) => {
 			t.is(src, val, '~> receives `src` param first');
@@ -315,7 +315,7 @@ test('prog.parse :: lazy :: single', t => {
 
 	let val='aaa', f=false;
 
-	let ctx = sade('foo <src>').option('--force').action((src, opts) => {
+	let ctx = bade('foo <src>').option('--force').action((src, opts) => {
 		t.is(src, val, '~> receives `src` param first');
 		f && t.ok(opts.force, '~> receives the `force` flag (true) when parsed');
 	});

@@ -1,18 +1,13 @@
-# sade [![CI](https://github.com/lukeed/sade/workflows/CI/badge.svg)](https://github.com/lukeed/sade/actions?query=workflow%3ACI) [![licenses](https://licenses.dev/b/npm/sade)](https://licenses.dev/npm/sade)
+# bade [![licenses](https://licenses.dev/b/npm/bade)](https://licenses.dev/npm/bade)
 
-> Smooth (CLI) Operator 🎶
+> Smooth (CLI) Operator for Bitburner 🎶
 
-Sade is a small but powerful tool for building command-line interface (CLI) applications for Node.js that are fast, responsive, and helpful!
-
-It enables default commands, git-like subcommands, option flags with aliases, default option values with type-casting, required-vs-optional argument handling, command validation, and automated help text generation!
-
-Your app's UX will be as smooth as butter... just like [Sade's voice](https://www.youtube.com/watch?v=4TYv2PhG89A). 😉
-
+Bade is a fork of Bade, modified for Bitburner.
 
 ## Install
 
 ```
-$ npm install --save sade
+$ npm install --save bade
 ```
 
 
@@ -21,27 +16,47 @@ $ npm install --save sade
 ***Input:***
 
 ```js
-#!/usr/bin/env node
+import bade from "bade";
 
-const sade = require('sade');
+/**
+ * @param {NS} ns
+ */
+export async function main(ns) {
+    const program = bade(ns.getScriptName())
 
-const prog = sade('my-cli');
+    program
+      .version("1.0.0")
+      .option("--global, -g", "An example global flag")
+      .option("-c, --config", "Provide path to custom config", "foo.config.js");
+
+    program
+      .command("test <arg1> <arg2>")
+      .describe('Run the test command.')
+      .option('-o, --output', 'Log to file instead of terminal.', "")
+      .example('test FirstArgument SecondArgument --global --config my-conf.js')
+      .example('test Foo Bar -o log.txt')
+      .action((src, dest, opts) => {
+        if (opts.o) {
+          ns.write(opts.o, `> building from ${src} to ${dest}`);
+          ns.write(opts.o, `> these are extra opts: ${opts}`);
+        } else {
+          ns.tprint(`> building from ${src} to ${dest}`);
+          ns.tprint('> these are extra opts', opts);
+        }
+      });
+
+    program.parse(ns.args)
+}
+
+const bade = require('bade');
+
+const prog = bade('my-cli');
 
 prog
   .version('1.0.5')
-  .option('--global, -g', 'An example global flag')
-  .option('-c, --config', 'Provide path to custom config', 'foo.config.js');
 
 prog
   .command('build <src> <dest>')
-  .describe('Build the source directory. Expects an `index.js` entry file.')
-  .option('-o, --output', 'Change the name of the output file', 'bundle.js')
-  .example('build src build --global --config my-conf.js')
-  .example('build app public -o main.js')
-  .action((src, dest, opts) => {
-    console.log(`> building from ${src} to ${dest}`);
-    console.log('> these are extra opts', opts);
-  });
 
 prog.parse(process.argv);
 ```
@@ -93,7 +108,7 @@ $ my-cli build --help
   _Once you define a Command, you can't access the global-scope again._
 
 - **Define all commands & options in the order that you want them to appear.**<br>
-  _Sade will not mutate or sort your CLI for you. Global options print before local options._
+  _Bade will not mutate or sort your CLI for you. Global options print before local options._
 
 - **Required arguments without values will error & exit**<br>
   _An `Insufficient arguments!` error will be displayed along with a help prompt._
@@ -117,7 +132,7 @@ They should be defined in the order that you want them to appear in your general
 Lastly, it is _not_ necessary to define the subcommand's "base" as an additional command. However, if you choose to do so, it's recommended that you define it first for better visibility.
 
 ```js
-const prog = sade('git');
+const prog = bade('git');
 
 // Not necessary for subcommands to work, but it's here anyway!
 prog
@@ -143,7 +158,7 @@ prog
 
 ## Single Command Mode
 
-In certain circumstances, you may only need `sade` for a single-command CLI application.
+In certain circumstances, you may only need `bade` for a single-command CLI application.
 
 > **Note:** Until `v1.6.0`, this made for an awkward pairing.
 
@@ -158,7 +173,7 @@ With "Single Command Mode" enabled, your entire binary operates as one command. 
 Let's reconstruct [`sirv-cli`](https://github.com/lukeed/sirv), which is a single-command application that (optionally) accepts a directory from which to serve files. It also offers a slew of option flags:
 
 ```js
-sade('sirv [dir]', true)
+bade('sirv [dir]', true)
   .version('1.0.0')
   .describe('Run a static file server')
   .example('public -qeim 31536000')
@@ -213,10 +228,10 @@ Instead, they only appear within the Command-specific help text under an "Aliase
 
 ***Example***
 
-Let's reconstruct the `npm install` command as a Sade program:
+Let's reconstruct the `npm install` command as a Bade program:
 
 ```js
-sade('npm')
+bade('npm')
   // ...
   .command('install [package]', 'Install a package', {
     alias: ['i', 'add', 'isntall']
@@ -271,10 +286,10 @@ When we run `npm install --help` &mdash; ***or*** the help flag with any of `ins
 
 ## API
 
-### sade(name, isSingle)
+### bade(name, isSingle)
 Returns: `Program`
 
-Returns your chainable Sade instance, aka your `Program`.
+Returns your chainable Bade instance, aka your `Program`.
 
 #### name
 Type: `String`<br>
@@ -322,7 +337,7 @@ When optional arguments are defined but don't receive a value, their positionall
 > **Important:** You **must** define & expect required arguments _before_ optional arguments!
 
 ```js
-sade('foo')
+bade('foo')
 
   .command('greet <adjective> <noun>')
   .action((adjective, noun, opts) => {
@@ -377,11 +392,11 @@ When declared, the `opts.alias` value is passed _directly_ to the [`prog.alias`]
 // Program A is equivalent to Program B
 // ---
 
-const A = sade('bin')
+const A = bade('bin')
   .command('build', 'My build command', { alias: 'b' })
   .command('watch', 'My watch command', { alias: ['w', 'dev'] });
 
-const B = sade('bin')
+const B = bade('bin')
   .command('build', 'My build command').alias('b')
   .command('watch', 'My watch command').alias('w', 'dev');
 ```
@@ -396,7 +411,7 @@ Manually set/force the current Command to be the Program's default command. This
 > **Important:** If you run your Program without a Command _and_ without specifying a default command, your Program will exit with a `No command specified` error.
 
 ```js
-const prog = sade('greet');
+const prog = bade('greet');
 
 prog.command('hello');
 //=> only runs if :: `$ greet hello`
@@ -445,12 +460,12 @@ Type: `String`
 The list of alternative names (aliases) for the current Command.<br>
 For example, you may want to define shortcuts and/or common typos for the Command's full name.
 
-> **Important:** Sade _does not_ check if the incoming `names` are already in use by other Commands or their aliases.<br>During conflicts, the Command with the same `name` is given priority, otherwise the first Command (according to Program order) with `name` as an alias is chosen.
+> **Important:** Bade _does not_ check if the incoming `names` are already in use by other Commands or their aliases.<br>During conflicts, the Command with the same `name` is given priority, otherwise the first Command (according to Program order) with `name` as an alias is chosen.
 
 The `prog.alias()` is append-only, so calling it multiple times within a Command context will _keep_ all aliases, including those initially passed via [`opts.alias`](#optsdefault).
 
 ```js
-sade('bin')
+bade('bin')
   .command('hello <name>', 'Greet someone by their name', {
     alias: ['hey', 'yo']
   })
@@ -477,7 +492,7 @@ All options, flags, and extra/unknown values are included as the last parameter.
 > **Note:** Optional arguments are also passed as parameters & may be `undefined`!
 
 ```js
-sade('foo')
+bade('foo')
   .command('cp <src> <dest>')
   .option('-f, --force', 'Overwrite without confirmation')
   .option('-c, --clone-dir', 'Copy files to additional directory')
@@ -509,7 +524,7 @@ Type: `String`
 
 The example string to add. This will be included in the general or command-specific `--help` output.
 
-> **Note:** Your example's `str` will be prefixed with your Program's [`name`](#sadename).
+> **Note:** Your example's `str` will be prefixed with your Program's [`name`](#badename).
 
 
 ### prog.option(flags, desc, value)
@@ -619,7 +634,7 @@ Your handler will receive the unknown flag (string) as its only argument.<br>
 You may return a string, which will be used as a custom error message. Otherwise, a default message is displayed.
 
 ```js
-sade('sirv')
+bade('sirv')
   .command('start [dir]')
   .parse(process.argv, {
     unknown: arg => `Custom error message: ${arg}`
@@ -640,7 +655,7 @@ $ sirv start --foobar
 Type: `Boolean`<br>
 Default: `false`
 
-If true, Sade will not immediately execute the `action` handler. Instead, `parse()` will return an object of `{ name, args, handler }` shape, wherein the `name` is the command name, `args` is all arguments that _would be_ passed to the action handler, and `handler` is the function itself.
+If true, Bade will not immediately execute the `action` handler. Instead, `parse()` will return an object of `{ name, args, handler }` shape, wherein the `name` is the command name, `args` is all arguments that _would be_ passed to the action handler, and `handler` is the function itself.
 
 From this, you may choose when to run the `handler` function. You also have the option to further modify the `args` for any reason, if needed.
 

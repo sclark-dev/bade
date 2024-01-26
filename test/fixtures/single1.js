@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const sade = require('../../lib');
+const bade = require('../../lib');
 
-sade('bin <type> [dir]')
+bade('bin <type> [dir]')
 	.describe('hello description')
 	.option('-g, --global', 'flag 1')
 	.action((type, dir, opts) => {

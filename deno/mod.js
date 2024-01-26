@@ -4,7 +4,7 @@ import * as $ from "./utils.js";
 const ALL = "__all__";
 const DEF = "__default__";
 
-class Sade {
+class Bade {
   constructor(name, isOne) {
     const [bin, ...rest] = name.split(/\s+/);
     isOne = isOne || rest.length > 0;
@@ -218,4 +218,4 @@ class Sade {
   }
 }
 
-export default (str, isOne) => new Sade(str, isOne);
+export default (str, isOne) => new Bade(str, isOne);

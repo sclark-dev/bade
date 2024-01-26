@@ -1,5 +1,5 @@
 import test from 'tape';
-import sade from '../src/index';
+import bade from '../src/index';
 import * as $ from '../src/utils';
 
 test('utils.parse', t => {
@@ -38,7 +38,7 @@ test('utils.sentences', t => {
 });
 
 test('utils.help', t => {
-	let { bin, tree } = sade('foo').describe('global foo').command('bar', 'Hello. World.').command('fizz <buzz>');
+	let { bin, tree } = bade('foo').describe('global foo').command('bar', 'Hello. World.').command('fizz <buzz>');
 
 	let foo = $.help(bin, tree, '__default__'); // global, 1 or 0 lines of desc per command
 	t.is(foo, '\n  Description\n    global foo\n\n  Usage\n    $ foo <command> [options]\n\n  Available Commands\n    bar     Hello.\n    fizz    \n\n  For more info, run any command with the `--help` flag\n    $ foo bar --help\n    $ foo fizz --help\n\n  Options\n    -v, --version    Displays current version\n    -h, --help       Displays this message\n');
@@ -53,7 +53,7 @@ test('utils.help', t => {
 });
 
 test('utils.help :: single', t => {
-	let { bin, tree } = sade('foo <bar> [baz]', true).describe('global foo').option('-p, --port', 'Custom port value', 8000);
+	let { bin, tree } = bade('foo <bar> [baz]', true).describe('global foo').option('-p, --port', 'Custom port value', 8000);
 
 	let text = $.help(bin, tree, '__default__', true);
 	t.is(text, '\n  Description\n    global foo\n\n  Usage\n    $ foo <bar> [baz] [options]\n\n  Options\n    -p, --port       Custom port value  (default 8000)\n    -v, --version    Displays current version\n    -h, --help       Displays this message\n');
@@ -63,7 +63,7 @@ test('utils.help :: single', t => {
 
 test('utils.help :: alias', t => {
 	let { bin, tree } = (
-		sade('bin')
+		bade('bin')
 			.describe('program description')
 			.command('foo', 'Hello, foo!', { alias: 'f' })
 			.command('bar <fizz>', 'Heya, bar!', { alias: ['b', 'ba'] })
