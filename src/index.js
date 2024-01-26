@@ -241,7 +241,7 @@ export class Bade {
 		opts.default = Object.assign(all.default, cmd.default, opts.default);
 
 		tmp = name.split(' ');
-		idx = arr.indexOf(tmp[0], 2);
+		idx = arr.indexOf(tmp[0], 0);
 		if (!!~idx) arr.splice(idx, tmp.length);
 
 		let vals = mri(arr.slice(offset), opts);
