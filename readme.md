@@ -2,12 +2,12 @@
 
 > Smooth (CLI) Operator for Bitburner 🎶
 
-Bade is a fork of Bade, modified for Bitburner.
+Bade is a fork of Sade, modified for Bitburner.
 
 ## Install
 
 ```
-$ npm install --save bade
+wget https://raw.githubusercontent.com/sclark-dev/bade/master/dist/bade.js bade.js
 ```
 
 
@@ -16,20 +16,20 @@ $ npm install --save bade
 ***Input:***
 
 ```js
-import bade from "bade";
+import { Bade } from "bade";
 
 /**
  * @param {NS} ns
  */
 export async function main(ns) {
-    const program = bade(ns.getScriptName())
+    const prog = new Bade(ns, ns.getScriptName())
 
-    program
+    prog
       .version("1.0.0")
       .option("--global, -g", "An example global flag")
       .option("-c, --config", "Provide path to custom config", "foo.config.js");
 
-    program
+    prog
       .command("test <arg1> <arg2>")
       .describe('Run the test command.')
       .option('-o, --output', 'Log to file instead of terminal.', "")
@@ -45,61 +45,50 @@ export async function main(ns) {
         }
       });
 
-    program.parse(ns.args)
+    prog.parse(ns.args)
 }
-
-const bade = require('bade');
-
-const prog = bade('my-cli');
-
-prog
-  .version('1.0.5')
-
-prog
-  .command('build <src> <dest>')
-
-prog.parse(process.argv);
 ```
 
 ***Output:***
 
 ```a
-$ my-cli --help
-
+[home /]> script.js --help
+Running script with 1 thread(s), pid 1 and args: ["--help"].
+script.js:
   Usage
-    $ my-cli <command> [options]
+    $ script.js <command> [options]
 
   Available Commands
-    build    Build the source directory.
+    test    Run the test command.
 
   For more info, run any command with the `--help` flag
-    $ my-cli build --help
+    $ script.js test --help
 
   Options
-    -v, --version    Displays current version
     -g, --global     An example global flag
     -c, --config     Provide path to custom config  (default foo.config.js)
+    -v, --version    Displays current version
     -h, --help       Displays this message
 
 
-$ my-cli build --help
-
+[home /]> script.js test --help
+Running script with 1 thread(s), pid 2 and args: ["test","--help"].
+script.js:
   Description
-    Build the source directory.
-    Expects an `index.js` entry file.
+    Run the test command.
 
   Usage
-    $ my-cli build <src> [options]
+    $ script.js test <arg1> <arg2> [options]
 
   Options
-    -o, --output    Change the name of the output file  (default bundle.js)
+    -o, --output    Log to file instead of terminal.  (default )
     -g, --global    An example global flag
     -c, --config    Provide path to custom config  (default foo.config.js)
     -h, --help      Displays this message
 
   Examples
-    $ my-cli build src build --global --config my-conf.js
-    $ my-cli build app public -o main.js
+    $ script.js test FirstArgument SecondArgument --global --config my-conf.js
+    $ script.js test Foo Bar -o log.txt
 ```
 
 ## Tips
@@ -132,26 +121,26 @@ They should be defined in the order that you want them to appear in your general
 Lastly, it is _not_ necessary to define the subcommand's "base" as an additional command. However, if you choose to do so, it's recommended that you define it first for better visibility.
 
 ```js
-const prog = bade('git');
+const prog = new Bade('git');
 
 // Not necessary for subcommands to work, but it's here anyway!
 prog
   .command('remote')
   .describe('Manage set of tracked repositories')
   .action(opts => {
-    console.log('~> Print current remotes...');
+    ns.tprint('~> Print current remotes...');
   });
 
 prog
   .command('remote add <name> <url>', 'Demo...')
   .action((name, url, opts) => {
-    console.log(`~> Adding a new remote (${name}) to ${url}`);
+    ns.tprint(`~> Adding a new remote (${name}) to ${url}`);
   });
 
 prog
   .command('remote rename <old> <new>', 'Demo...')
   .action((old, nxt, opts) => {
-    console.log(`~> Renaming from ${old} to ${nxt}~!`);
+    ns.tprint(`~> Renaming from ${old} to ${nxt}~!`);
   });
 ```
 
@@ -173,7 +162,7 @@ With "Single Command Mode" enabled, your entire binary operates as one command. 
 Let's reconstruct [`sirv-cli`](https://github.com/lukeed/sirv), which is a single-command application that (optionally) accepts a directory from which to serve files. It also offers a slew of option flags:
 
 ```js
-bade('sirv [dir]', true)
+new Bade('sirv [dir]', true)
   .version('1.0.0')
   .describe('Run a static file server')
   .example('public -qeim 31536000')
@@ -231,7 +220,7 @@ Instead, they only appear within the Command-specific help text under an "Aliase
 Let's reconstruct the `npm install` command as a Bade program:
 
 ```js
-bade('npm')
+new Bade('npm')
   // ...
   .command('install [package]', 'Install a package', {
     alias: ['i', 'add', 'isntall']
@@ -337,11 +326,11 @@ When optional arguments are defined but don't receive a value, their positionall
 > **Important:** You **must** define & expect required arguments _before_ optional arguments!
 
 ```js
-bade('foo')
+new Bade('foo')
 
   .command('greet <adjective> <noun>')
   .action((adjective, noun, opts) => {
-    console.log(`Hello, ${adjective} ${noun}!`);
+    ns.tprint(`Hello, ${adjective} ${noun}!`);
   })
 
   .command('drive <vehicle> [color] [speed]')
@@ -351,7 +340,7 @@ bade('foo')
     speed && arr.push(`at ${speed}`);
     opts.yolo && arr.push('...YOLO!!');
     let str = arr.join(' ');
-    console.log(str);
+    ns.tprint(str);
   });
 ```
 
@@ -392,11 +381,11 @@ When declared, the `opts.alias` value is passed _directly_ to the [`prog.alias`]
 // Program A is equivalent to Program B
 // ---
 
-const A = bade('bin')
+const A = new Bade('bin')
   .command('build', 'My build command', { alias: 'b' })
   .command('watch', 'My watch command', { alias: ['w', 'dev'] });
 
-const B = bade('bin')
+const B = new Bade('bin')
   .command('build', 'My build command').alias('b')
   .command('watch', 'My watch command').alias('w', 'dev');
 ```
@@ -411,7 +400,7 @@ Manually set/force the current Command to be the Program's default command. This
 > **Important:** If you run your Program without a Command _and_ without specifying a default command, your Program will exit with a `No command specified` error.
 
 ```js
-const prog = bade('greet');
+const prog = new Bade('greet');
 
 prog.command('hello');
 //=> only runs if :: `$ greet hello`
@@ -465,7 +454,7 @@ For example, you may want to define shortcuts and/or common typos for the Comman
 The `prog.alias()` is append-only, so calling it multiple times within a Command context will _keep_ all aliases, including those initially passed via [`opts.alias`](#optsdefault).
 
 ```js
-bade('bin')
+new Bade('bin')
   .command('hello <name>', 'Greet someone by their name', {
     alias: ['hey', 'yo']
   })
@@ -492,15 +481,15 @@ All options, flags, and extra/unknown values are included as the last parameter.
 > **Note:** Optional arguments are also passed as parameters & may be `undefined`!
 
 ```js
-bade('foo')
+new Bade('foo')
   .command('cp <src> <dest>')
   .option('-f, --force', 'Overwrite without confirmation')
   .option('-c, --clone-dir', 'Copy files to additional directory')
   .option('-v, --verbose', 'Enable verbose output')
   .action((src, dest, opts) => {
-    console.log(`Copying files from ${src} --> ${dest}`);
-    opts.c && console.log(`ALSO copying files from ${src} --> ${opts['clone-dir']}`);
-    console.log('My options:', opts);
+    ns.tprint(`Copying files from ${src} --> ${dest}`);
+    opts.c && ns.tprint(`ALSO copying files from ${src} --> ${opts['clone-dir']}`);
+    ns.tprint('My options:', opts);
   })
 
 // $ foo cp original my-copy -v
@@ -634,7 +623,7 @@ Your handler will receive the unknown flag (string) as its only argument.<br>
 You may return a string, which will be used as a custom error message. Otherwise, a default message is displayed.
 
 ```js
-bade('sirv')
+new Bade('sirv')
   .command('start [dir]')
   .parse(process.argv, {
     unknown: arg => `Custom error message: ${arg}`
@@ -661,7 +650,7 @@ From this, you may choose when to run the `handler` function. You also have the 
 
 ```js
 let { name, args, handler } = prog.parse(process.argv, { lazy:true });
-console.log('> Received command: ', name);
+ns.tprint('> Received command: ', name);
 
 // later on...
 handler.apply(null, args);
