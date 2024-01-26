@@ -20,7 +20,7 @@ export class Bade {
 	 * @param name Your application name. Defaults to `ns.getScriptName()`
 	 * @param isOne Set this instance to be a single command program.
 	 */
-	constructor(ns: NS, name: string, isOne?: boolean);
+	constructor(ns: NS, name?: string, isOne?: boolean);
 
 	/**
 	 * Creates a new command for your program.
