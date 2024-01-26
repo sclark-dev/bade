@@ -5,6 +5,10 @@ export const GAP = 4;
 export const __ = '  ';
 export const NL = '\n';
 
+/**
+ * @param {string[]} arr
+ * @return {string|string[]}
+ */
 export function format(arr) {
 	if (!arr.length) return '';
 	let len = maxLen(arr.map(x => x[0])) + GAP;
@@ -12,6 +16,11 @@ export function format(arr) {
 	return arr.map(join);
 }
 
+/**
+ * @template T
+ * @param {T[]} arr
+ * @return {T}
+ */
 export function maxLen(arr) {
 	let c = 0, d = 0, l = 0, i = arr.length;
 	if (i) while (i--) {
@@ -24,10 +33,21 @@ export function maxLen(arr) {
 	return arr[l].length;
 }
 
+/**
+ * @template T
+ * @param {T} s
+ * @return {T}
+ */
 export function noop(s) {
 	return s;
 }
 
+/**
+ * @param {string} str
+ * @param {string[]} arr
+ * @param {function(any):string} fn
+ * @return {string}
+ */
 export function section(str, arr, fn) {
 	if (!arr || !arr.length) return '';
 	let i = 0, out = '';
@@ -38,6 +58,13 @@ export function section(str, arr, fn) {
 	return out + NL;
 }
 
+/**
+ * @param {string} bin
+ * @param {{}} tree
+ * @param key
+ * @param {boolean} single
+ * @return {string}
+ */
 export function help(bin, tree, key, single) {
 	let out = '', cmd = tree[key], pfx = `$ ${bin}`, all = tree[ALL];
 	let prefix = s => `${pfx} ${s}`.replace(/\s+/g, ' ');
@@ -91,11 +118,19 @@ export function error(ns, bin, str, num = 1) {
 }
 
 // Strips leading `-|--` & extra space(s)
+/**
+ * @param {string} str
+ * @return {string[]}
+ */
 export function parse(str) {
 	return (str || '').split(/^-{1,2}|,|\s+-{1,2}|\s+/).filter(Boolean);
 }
 
 // @see https://stackoverflow.com/a/18914855/3577474
+/**
+ * @param {string} str
+ * @return {string[]}
+ */
 export function sentences(str) {
 	return (str || '').replace(/([.?!])\s*(?=[A-Z])/g, '$1|').split('|');
 }

@@ -125,6 +125,10 @@ const GAP = 4;
 const __ = '  ';
 const NL = '\n';
 
+/**
+ * @param {string[]} arr
+ * @return {string|string[]}
+ */
 function format(arr) {
 	if (!arr.length) return '';
 	let len = maxLen(arr.map(x => x[0])) + GAP;
@@ -132,6 +136,11 @@ function format(arr) {
 	return arr.map(join);
 }
 
+/**
+ * @template T
+ * @param {T[]} arr
+ * @return {T}
+ */
 function maxLen(arr) {
 	let c = 0, d = 0, l = 0, i = arr.length;
 	if (i) while (i--) {
@@ -144,10 +153,21 @@ function maxLen(arr) {
 	return arr[l].length;
 }
 
+/**
+ * @template T
+ * @param {T} s
+ * @return {T}
+ */
 function noop(s) {
 	return s;
 }
 
+/**
+ * @param {string} str
+ * @param {string[]} arr
+ * @param {function(any):string} fn
+ * @return {string}
+ */
 function section(str, arr, fn) {
 	if (!arr || !arr.length) return '';
 	let i = 0, out = '';
@@ -158,6 +178,13 @@ function section(str, arr, fn) {
 	return out + NL;
 }
 
+/**
+ * @param {string} bin
+ * @param {{}} tree
+ * @param key
+ * @param {boolean} single
+ * @return {string}
+ */
 function help(bin, tree, key, single) {
 	let out = '', cmd = tree[key], pfx = `$ ${bin}`, all = tree[ALL];
 	let prefix = s => `${pfx} ${s}`.replace(/\s+/g, ' ');
@@ -211,27 +238,52 @@ function error(ns, bin, str, num = 1) {
 }
 
 // Strips leading `-|--` & extra space(s)
+/**
+ * @param {string} str
+ * @return {string[]}
+ */
 function parse(str) {
 	return (str || '').split(/^-{1,2}|,|\s+-{1,2}|\s+/).filter(Boolean);
 }
 
 // @see https://stackoverflow.com/a/18914855/3577474
+/**
+ * @param {string} str
+ * @return {string[]}
+ */
 function sentences(str) {
 	return (str || '').replace(/([.?!])\s*(?=[A-Z])/g, '$1|').split('|');
 }
 
+/**
+ * Smooth (CLI) Operator for Bitburner.
+ */
 class Bade {
 	/**
-	 * @param {NS} ns
+	 * Constructs the chainable Bade instance.
+	 * @param {NS} ns The Bitburner namespace.
+	 * @param {string} [name] Your application name. Defaults to `ns.getScriptName()`
+	 * @param {boolean} [isOne] Set this instance to be a single command program.
 	 */
 	constructor(ns, name, isOne) {
-		let [bin, ...rest] = name.split(/\s+/);
+		let [bin, ...rest] = (name || ns.getScriptName()).split(/\s+/);
 		isOne = isOne || rest.length > 0;
 
+		/**
+		 * @type {NS}
+		 */
 		this.ns = ns;
+
+		/**
+		 * The script that contains this program.
+		 * @type {string}
+		 */
 		this.bin = bin;
 		this.ver = '0.0.0';
 		this.default = '';
+		/**
+		 * @type {{}}
+		 */
 		this.tree = {};
 		// set internal shapes;
 		this.command(ALL);
@@ -240,6 +292,21 @@ class Bade {
 		this.curr = ''; // reset
 	}
 
+	/**
+	 * Creates a new command for your program.
+	 * @param {string} str The usage pattern for your command. This will be shown in the `--help` output.
+	 *
+	 * Required arguments are wrapped with `<` and `>` characters; Example: `<foo>` and `<bar>`
+	 *
+	 * Optional arguments are wrapped with `[` and `]` characters; Example: `[foo]` and `[bar]`
+	 *
+	 * All arguments are positionally important. Optional arguments will be `undefined` if they are omitted.
+	 * @param {string} [desc] The command's description.
+	 * @param {{alias: (string|string[]), default: boolean}} [opts] Additional options for the command.
+	 * - alias: Optionally define one or more aliases for the current command.
+	 * - default: Manually set/force this command to be the default command. If no command is specified, this will run instead.
+	 * @return Bade
+	 */
 	command(str, desc, opts = {}) {
 		if (this.single) {
 			throw new Error('Disable "single" mode to add commands');
@@ -272,11 +339,23 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Add a description to the current command.
+	 * @param {string} str The description text for the current command. This will be included in the `--help` output.
+	 * @return {Bade}
+	 */
 	describe(str) {
 		this.tree[this.curr || DEF].describe = Array.isArray(str) ? str : sentences(str);
 		return this;
 	}
 
+	/**
+	 * Define one or more aliases for the current command.
+	 *
+	 * **Warning: Bade doesn't check if aliases are already in use**
+	 * @param {string[]} names The list of alternative names.
+	 * @return {Bade}
+	 */
 	alias(...names) {
 		if (this.single) throw new Error('Cannot call `alias()` in "single" mode');
 		if (!this.curr) throw new Error('Cannot call `alias()` before defining a command');
@@ -285,6 +364,15 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Add an option to the current command.
+	 * @param {string} str The option's flags, which may optionally include an alias. Separate flags with commas, or spaces.
+	 * @param {string} desc The option's description.
+	 * @param {string|number} val The default value for that option. If the flag is parsed, it always returns `true`. See [mri](https://github.com/lukeed/mri#minimist) for more info.
+	 *
+	 * **Note:** The flag return value will be cast to the same data type as the default value.
+	 * @return {Bade}
+	 */
 	option(str, desc, val) {
 		let cmd = this.tree[this.curr || ALL];
 
@@ -311,16 +399,33 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Attach a callback to the current command.
+	 * @param {(function(...any[]): void)} handler The function to run when the current command is executed.
+	 *
+	 * The parameters are based on positional arguments defined in the command's `usage`. The final parameter is used for all options, flags, and extra values.
+	 * @return {Bade}
+	 */
 	action(handler) {
 		this.tree[this.curr || DEF].handler = handler;
 		return this;
 	}
 
+	/**
+	 * Add an example for the current command.
+	 * @param {string} str The example string to add. It will be prefixed with the program's name.
+	 * @return {Bade}
+	 */
 	example(str) {
 		this.tree[this.curr || DEF].examples.push(str);
 		return this;
 	}
 
+	/**
+	 * Sets the version that is shown when `--version` or `-v` are used.
+	 * @param {string} str The new version number for the program.
+	 * @return {Bade}
+	 */
 	version(str) {
 		this.ver = str;
 		return this;
@@ -330,10 +435,11 @@ class Bade {
 	 * Parse a set of CLI arguments
 	 * @param {(string | number | boolean)[]} arr Your script's ns.args input.
 	 * @param opts Additional parsing options.
+	 * @return {void|{name: string, handler: function(...any[]), args: string[]}}
 	 */
 	parse(arr, opts = {}) {
 		arr = arr.slice().map(a => a.toString()); // copy and convert all to string
-		let offset = 2, tmp, idx, isVoid, cmd;
+		let offset = 0, tmp, idx, isVoid, cmd;
 		let alias = {h: 'help', v: 'version'};
 		let argv = mri(arr.slice(offset), {alias});
 		let isSingle = this.single;
@@ -414,6 +520,10 @@ class Bade {
 		return opts.lazy ? {args, name, handler} : handler.apply(null, args);
 	}
 
+	/**
+	 * Print the CLI help, optionally for a given command.
+	 * @param {string} [str] The command to show the help for.
+	 */
 	help(str) {
 		this.ns.tprint(
 			help(this.bin, this.tree, str || DEF, this.single)
@@ -425,6 +535,4 @@ class Bade {
 	}
 }
 
-var index = (str, isOne) => new Bade(str, isOne);
-
-export { index as default };
+export { Bade };

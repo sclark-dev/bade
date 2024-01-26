@@ -2,18 +2,35 @@ import mri from 'mri';
 import * as $ from './utils';
 import {ALL, DEF} from './utils';
 
-class Bade {
+/**
+ * Smooth (CLI) Operator for Bitburner.
+ */
+export class Bade {
 	/**
-	 * @param {NS} ns
+	 * Constructs the chainable Bade instance.
+	 * @param {NS} ns The Bitburner namespace.
+	 * @param {string} [name] Your application name. Defaults to `ns.getScriptName()`
+	 * @param {boolean} [isOne] Set this instance to be a single command program.
 	 */
 	constructor(ns, name, isOne) {
-		let [bin, ...rest] = name.split(/\s+/);
+		let [bin, ...rest] = (name || ns.getScriptName()).split(/\s+/);
 		isOne = isOne || rest.length > 0;
 
+		/**
+		 * @type {NS}
+		 */
 		this.ns = ns;
+
+		/**
+		 * The script that contains this program.
+		 * @type {string}
+		 */
 		this.bin = bin;
 		this.ver = '0.0.0';
 		this.default = '';
+		/**
+		 * @type {{}}
+		 */
 		this.tree = {};
 		// set internal shapes;
 		this.command(ALL);
@@ -22,6 +39,21 @@ class Bade {
 		this.curr = ''; // reset
 	}
 
+	/**
+	 * Creates a new command for your program.
+	 * @param {string} str The usage pattern for your command. This will be shown in the `--help` output.
+	 *
+	 * Required arguments are wrapped with `<` and `>` characters; Example: `<foo>` and `<bar>`
+	 *
+	 * Optional arguments are wrapped with `[` and `]` characters; Example: `[foo]` and `[bar]`
+	 *
+	 * All arguments are positionally important. Optional arguments will be `undefined` if they are omitted.
+	 * @param {string} [desc] The command's description.
+	 * @param {{alias: (string|string[]), default: boolean}} [opts] Additional options for the command.
+	 * - alias: Optionally define one or more aliases for the current command.
+	 * - default: Manually set/force this command to be the default command. If no command is specified, this will run instead.
+	 * @return Bade
+	 */
 	command(str, desc, opts = {}) {
 		if (this.single) {
 			throw new Error('Disable "single" mode to add commands');
@@ -54,11 +86,23 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Add a description to the current command.
+	 * @param {string} str The description text for the current command. This will be included in the `--help` output.
+	 * @return {Bade}
+	 */
 	describe(str) {
 		this.tree[this.curr || DEF].describe = Array.isArray(str) ? str : $.sentences(str);
 		return this;
 	}
 
+	/**
+	 * Define one or more aliases for the current command.
+	 *
+	 * **Warning: Bade doesn't check if aliases are already in use**
+	 * @param {string[]} names The list of alternative names.
+	 * @return {Bade}
+	 */
 	alias(...names) {
 		if (this.single) throw new Error('Cannot call `alias()` in "single" mode');
 		if (!this.curr) throw new Error('Cannot call `alias()` before defining a command');
@@ -67,6 +111,15 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Add an option to the current command.
+	 * @param {string} str The option's flags, which may optionally include an alias. Separate flags with commas, or spaces.
+	 * @param {string} desc The option's description.
+	 * @param {string|number} val The default value for that option. If the flag is parsed, it always returns `true`. See [mri](https://github.com/lukeed/mri#minimist) for more info.
+	 *
+	 * **Note:** The flag return value will be cast to the same data type as the default value.
+	 * @return {Bade}
+	 */
 	option(str, desc, val) {
 		let cmd = this.tree[this.curr || ALL];
 
@@ -93,16 +146,33 @@ class Bade {
 		return this;
 	}
 
+	/**
+	 * Attach a callback to the current command.
+	 * @param {(function(...any[]): void)} handler The function to run when the current command is executed.
+	 *
+	 * The parameters are based on positional arguments defined in the command's `usage`. The final parameter is used for all options, flags, and extra values.
+	 * @return {Bade}
+	 */
 	action(handler) {
 		this.tree[this.curr || DEF].handler = handler;
 		return this;
 	}
 
+	/**
+	 * Add an example for the current command.
+	 * @param {string} str The example string to add. It will be prefixed with the program's name.
+	 * @return {Bade}
+	 */
 	example(str) {
 		this.tree[this.curr || DEF].examples.push(str);
 		return this;
 	}
 
+	/**
+	 * Sets the version that is shown when `--version` or `-v` are used.
+	 * @param {string} str The new version number for the program.
+	 * @return {Bade}
+	 */
 	version(str) {
 		this.ver = str;
 		return this;
@@ -112,10 +182,11 @@ class Bade {
 	 * Parse a set of CLI arguments
 	 * @param {(string | number | boolean)[]} arr Your script's ns.args input.
 	 * @param opts Additional parsing options.
+	 * @return {void|{name: string, handler: function(...any[]), args: string[]}}
 	 */
 	parse(arr, opts = {}) {
 		arr = arr.slice().map(a => a.toString()); // copy and convert all to string
-		let offset = 2, tmp, idx, isVoid, cmd;
+		let offset = 0, tmp, idx, isVoid, cmd;
 		let alias = {h: 'help', v: 'version'};
 		let argv = mri(arr.slice(offset), {alias});
 		let isSingle = this.single;
@@ -196,6 +267,10 @@ class Bade {
 		return opts.lazy ? {args, name, handler} : handler.apply(null, args);
 	}
 
+	/**
+	 * Print the CLI help, optionally for a given command.
+	 * @param {string} [str] The command to show the help for.
+	 */
 	help(str) {
 		this.ns.tprint(
 			$.help(this.bin, this.tree, str || DEF, this.single)
@@ -206,5 +281,3 @@ class Bade {
 		this.ns.tprint(`${this.bin}, ${this.ver}`);
 	}
 }
-
-export default (str, isOne) => new Bade(str, isOne);
