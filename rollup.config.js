@@ -1,4 +1,4 @@
-import {minify} from 'terser';
+// import {minify} from 'terser';
 import * as pkg from './package.json';
 
 /**
@@ -15,7 +15,7 @@ const config = {
 	}, {
 		format: 'cjs',
 		file: pkg.main,
-		exports: 'default',
+		exports: 'auto',
 		preferConst: true,
 		interop: false,
 		freeze: false,
@@ -26,15 +26,15 @@ const config = {
 		...require('module').builtinModules,
 	],
 	plugins: [
-		{
-			name: 'terser',
-			renderChunk(code) {
-				return minify(code, {
-					module: true,
-					toplevel: false
-				})
-			}
-		}
+		// {
+		// 	name: 'terser',
+		// 	renderChunk(code) {
+		// 		return minify(code, {
+		// 			module: true,
+		// 			toplevel: false
+		// 		})
+		// 	}
+		// }
 	]
 }
 
